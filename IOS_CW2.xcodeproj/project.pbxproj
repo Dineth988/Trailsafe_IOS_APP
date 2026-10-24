@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1E9D8FA1308D0401001854ED /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1E9D8FA0308D0401001854ED /* README.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1E9D8F73308CF7BB001854ED /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		1E9D8F62308CF7B8001854ED /* IOS_CW2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IOS_CW2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E9D8F72308CF7BB001854ED /* IOS_CW2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IOS_CW2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E9D8F7C308CF7BB001854ED /* IOS_CW2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IOS_CW2UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1E9D8FA0308D0401001854ED /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +84,7 @@
 				1E9D8F75308CF7BB001854ED /* IOS_CW2Tests */,
 				1E9D8F7F308CF7BB001854ED /* IOS_CW2UITests */,
 				1E9D8F63308CF7B8001854ED /* Products */,
+				1E9D8FA0308D0401001854ED /* README.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E9D8FA1308D0401001854ED /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
