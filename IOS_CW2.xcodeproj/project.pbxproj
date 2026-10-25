@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1E9D8FA1308D0401001854ED /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1E9D8FA0308D0401001854ED /* README.md */; };
+		1E9D8FD1308FA0E0001854ED /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 1E9D8FD0308FA0E0001854ED /* .gitignore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,7 +33,25 @@
 		1E9D8F72308CF7BB001854ED /* IOS_CW2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IOS_CW2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E9D8F7C308CF7BB001854ED /* IOS_CW2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IOS_CW2UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E9D8FA0308D0401001854ED /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		1E9D8FD0308FA0E0001854ED /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1E9D8FCE308E5452001854ED /* Exceptions for "IOS_CW2UITests" folder in "IOS_CW2Tests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				IOS_CW2Tests.swift,
+			);
+			target = 1E9D8F71308CF7BB001854ED /* IOS_CW2Tests */;
+		};
+		1E9D8FCF308E5452001854ED /* Exceptions for "IOS_CW2UITests" folder in "IOS_CW2UITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				IOS_CW2Tests.swift,
+			);
+			target = 1E9D8F7B308CF7BB001854ED /* IOS_CW2UITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1E9D8F64308CF7B8001854ED /* IOS_CW2 */ = {
@@ -47,6 +66,10 @@
 		};
 		1E9D8F7F308CF7BB001854ED /* IOS_CW2UITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1E9D8FCE308E5452001854ED /* Exceptions for "IOS_CW2UITests" folder in "IOS_CW2Tests" target */,
+				1E9D8FCF308E5452001854ED /* Exceptions for "IOS_CW2UITests" folder in "IOS_CW2UITests" target */,
+			);
 			path = IOS_CW2UITests;
 			sourceTree = "<group>";
 		};
@@ -85,6 +108,7 @@
 				1E9D8F7F308CF7BB001854ED /* IOS_CW2UITests */,
 				1E9D8F63308CF7B8001854ED /* Products */,
 				1E9D8FA0308D0401001854ED /* README.md */,
+				1E9D8FD0308FA0E0001854ED /* .gitignore */,
 			);
 			sourceTree = "<group>";
 		};
@@ -218,6 +242,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E9D8FD1308FA0E0001854ED /* .gitignore in Resources */,
 				1E9D8FA1308D0401001854ED /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -405,6 +430,9 @@
 				DEVELOPMENT_ASSET_PATHS = "\"IOS_CW2/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "TrailSafe uses Face ID to keep your safety data private.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "TrailSafe tracks your trail in the background so you stay protected even when the screen is off.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TrailSafe uses your location to record trails and show you on the map.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -433,6 +461,9 @@
 				DEVELOPMENT_ASSET_PATHS = "\"IOS_CW2/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "TrailSafe uses Face ID to keep your safety data private.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "TrailSafe tracks your trail in the background so you stay protected even when the screen is off.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TrailSafe uses your location to record trails and show you on the map.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
