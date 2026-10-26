@@ -43,9 +43,7 @@ struct PlaceholderScreen: View {
 struct MainTabView: View {
     var body: some View {
         TabView {
-            PlaceholderScreen(title: "Home", icon: "map.fill",
-                              detail: "Live map, quick stats and Start Trail arrive on Day 2.",
-                              showsSOS: true)
+            DashboardView()
                 .tabItem { Label("Home", systemImage: "map.fill") }
 
             PlaceholderScreen(title: "History", icon: "chart.bar.fill",

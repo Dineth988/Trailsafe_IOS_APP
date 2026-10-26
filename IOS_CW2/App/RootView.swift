@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var recorder: TrailRecorder
 
     var body: some View {
         ZStack {
@@ -27,7 +28,10 @@ struct RootView: View {
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .background { appState.lockIfNeeded() }
+            if newPhase == .background {
+                recorder.persistNow()      // flush buffered GPS points to disk
+                appState.lockIfNeeded()
+            }
         }
         .tint(Theme.primary)
     }
