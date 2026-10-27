@@ -17,6 +17,7 @@ final class SOSManager: ObservableObject {
 
     /// Day 4 hook: send the SOS to Live Share and trusted contacts.
     var onTriggered: ((SOSEvent) -> Void)?
+    var onAcknowledged: (() -> Void)?
 
     private let location: LocationService
     private let notifications: NotificationService
@@ -49,6 +50,7 @@ final class SOSManager: ObservableObject {
     func acknowledge() {
         stopTimer()
         phase = .idle
+        onAcknowledged?()
     }
 
     // MARK: Internals

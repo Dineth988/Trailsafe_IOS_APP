@@ -9,6 +9,7 @@ struct SettingsView: View {
     @EnvironmentObject private var zones: SafeZoneMonitor
     @Environment(\.managedObjectContext) private var context
     @Environment(\.openURL) private var openURL
+    @EnvironmentObject private var liveShare: LiveShareManager
 
     @State private var confirmReset = false
 
@@ -21,7 +22,10 @@ struct SettingsView: View {
                 notificationsSection
                 dataSection
                 Section {
-                    Button("Log Out", role: .destructive) { appState.logOut() }
+                    Button("Log Out", role: .destructive) {
+                        liveShare.stop()
+                        appState.logOut()
+                    }
                 }
             }
             .scrollContentBackground(.hidden)

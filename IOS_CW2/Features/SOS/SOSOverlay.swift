@@ -2,6 +2,11 @@ import SwiftUI
 
 struct SOSOverlay: View {
     @EnvironmentObject private var sos: SOSManager
+    @EnvironmentObject private var liveShare: LiveShareManager
+    @EnvironmentObject private var appState: AppState
+    @Environment(\.managedObjectContext) private var context
+
+    @State private var showComposer = false
 
     private var isTriggered: Bool { sos.phase == .triggered }
     private var foreground: Color { isTriggered ? .white : Color(hex: 0x1B2A21) }
@@ -44,31 +49,56 @@ struct SOSOverlay: View {
     }
 
     private var triggeredView: some View {
-        VStack(spacing: Theme.Spacing.lg) {
+        let phones = ContactStore.phoneNumbers(ownerID: appState.currentUser?.id, in: context)
+
+        return VStack(spacing: Theme.Spacing.md) {
             Spacer()
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 72))
+                .font(.system(size: 64))
             Text("SOS triggered")
                 .font(Typography.largeTitle)
             if let event = sos.lastEvent {
                 VStack(spacing: 4) {
                     Text(event.date.formatted(date: .abbreviated, time: .shortened))
                     if let c = event.coordinate {
-                        Text(String(format: "%.5f, %.5f", c.latitude, c.longitude))
-                            .monospacedDigit()
+                        Text(String(format: "%.5f, %.5f", c.latitude, c.longitude)).monospacedDigit()
                     } else {
                         Text("Location not available yet")
                     }
                 }
                 .font(Typography.body)
             }
-            Text("Trusted-contact alerts and Live Share are connected on Day 4.")
-                .font(Typography.caption)
-                .multilineTextAlignment(.center)
+
+            if let url = liveShare.shareURL {
+                Text("Your live location is now available at your Live Share link.")
+                    .font(Typography.caption)
+                    .multilineTextAlignment(.center)
+                if MessageComposer.canSend, !phones.isEmpty {
+                    actionButton("Message My Contacts", filled: false) { showComposer = true }
+                }
+                ShareLink(item: url, message: Text(liveShare.sosMessage)) {
+                    Text("Share Link…")
+                        .font(Typography.button)
+                        .frame(maxWidth: .infinity, minHeight: 56)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
+                                .stroke(foreground, lineWidth: 2)
+                        )
+                }
+            } else {
+                Text(liveShare.errorMessage ?? "Starting Live Share…")
+                    .font(Typography.caption)
+                    .multilineTextAlignment(.center)
+            }
+
             Spacer()
             actionButton("I'm Safe", filled: true) { sos.acknowledge() }
         }
         .padding(Theme.Spacing.lg)
+        .sheet(isPresented: $showComposer) {
+            MessageComposer(recipients: phones, body: liveShare.sosMessage) { showComposer = false }
+                .ignoresSafeArea()
+        }
     }
 
     private func actionButton(_ title: String, filled: Bool, action: @escaping () -> Void) -> some View {

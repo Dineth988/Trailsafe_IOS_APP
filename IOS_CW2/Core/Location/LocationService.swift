@@ -15,6 +15,7 @@ final class LocationService: NSObject, ObservableObject {
 
     private let manager = CLLocationManager()
     private var didRequestAlways = false
+    private var consumers = Set<String>()
 
     var isAuthorized: Bool {
         authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
@@ -50,22 +51,30 @@ final class LocationService: NSObject, ObservableObject {
 
     // MARK: Tracking
 
-    func startTracking() {
+    func startTracking(for consumer: String = "trail") {
+        consumers.insert(consumer)
         guard isAuthorized else {
-            requestPermissionIfNeeded()
+            requestPermissionIfNeeded()     // tracking begins once permission is granted
             return
         }
-        manager.allowsBackgroundLocationUpdates = true
-        manager.showsBackgroundLocationIndicator = true
-        manager.startUpdatingLocation()
-        isUpdating = true
+        beginUpdatesIfNeeded()
     }
 
-    func stopTracking() {
+    func stopTracking(for consumer: String = "trail") {
+        consumers.remove(consumer)
+        guard consumers.isEmpty else { return }    // someone else still needs GPS
         manager.stopUpdatingLocation()
         manager.allowsBackgroundLocationUpdates = false
         manager.showsBackgroundLocationIndicator = false
         isUpdating = false
+    }
+    
+    private func beginUpdatesIfNeeded() {
+        guard !isUpdating else { return }
+        manager.allowsBackgroundLocationUpdates = true
+        manager.showsBackgroundLocationIndicator = true
+        manager.startUpdatingLocation()
+        isUpdating = true
     }
 
     /// One-off fix (used by the safe zone screen and SOS). Does nothing without permission.
@@ -78,7 +87,10 @@ final class LocationService: NSObject, ObservableObject {
 extension LocationService: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
-        Task { @MainActor in self.authorizationStatus = status }
+        Task { @MainActor in
+            self.authorizationStatus = status
+            if self.isAuthorized, !self.consumers.isEmpty { self.beginUpdatesIfNeeded() }
+        }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

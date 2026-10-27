@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2566">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!doctype html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="utf-8"&gt;</p>
+<p class="p1">&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</p>
+<p class="p1">&lt;title&gt;TrailSafe Live Share&lt;/title&gt;</p>
+<p class="p1">&lt;link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>:root { --green:#2D5A3D; --sand:#F6F1E7; --ink:#1B2A21; --red:#B3261E; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>* { box-sizing: border-box; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>html, body { height: 100%; margin: 0; font-family: -apple-system, system-ui, "Segoe UI", sans-serif; background: var(--sand); color: var(--ink); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>body { display: flex; flex-direction: column; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>header { padding: 14px 16px; background: var(--green); color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 12px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>h1 { font-size: 18px; margin: 0; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#badge { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.2); white-space: nowrap; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#badge.live { background: #fff; color: var(--green); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#badge.sos { background: var(--red); color: #fff; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#map { flex: 1; min-height: 240px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#info { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: #fff; font-size: 14px; line-height: 1.6; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#info.sos { background: #FDECEA; color: var(--red); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#info div { margin: 0; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>a { color: var(--green); font-weight: 600; margin-right: 12px; }</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1">&lt;header&gt;&lt;h1 id="who"&gt;TrailSafe Live Share&lt;/h1&gt;&lt;span id="badge"&gt;Loading…&lt;/span&gt;&lt;/header&gt;</p>
+<p class="p1">&lt;div id="map"&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;div id="info"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"&gt;&lt;/script&gt;</p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const DB_URL = " https://trailsafe-dineth988-default-rtdb.asia-southeast1.firebasedatabase.app/";<span class="Apple-converted-space">   </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const POLL_MS = 5000;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const STALE_MS = 120000;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const token = new URLSearchParams(location.search).get("s");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const who = document.getElementById("who");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const badge = document.getElementById("badge");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const info = document.getElementById("info");</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const map = L.map("map").setView([7.8731, 80.7718], 7);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>maxZoom: 19, attribution: "&amp;copy; OpenStreetMap contributors"</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}).addTo(map);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let dot = null, halo = null, centred = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function setBadge(text, cls) { badge.textContent = text; badge.className = cls || ""; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function render(lines, links, sos) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>info.className = sos ? "sos" : "";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>info.replaceChildren();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>for (const line of lines) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const div = document.createElement("div");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>div.textContent = line;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>info.appendChild(div);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (links &amp;&amp; links.length) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const div = document.createElement("div");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (const l of links) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const a = document.createElement("a");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>a.textContent = l.label; a.href = l.href; a.target = "_blank"; a.rel = "noopener";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>div.appendChild(a);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>info.appendChild(div);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function ago(ms) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const s = Math.max(0, Math.round((Date.now() - ms) / 1000));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (s &lt; 60) return s + " seconds ago";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const m = Math.round(s / 60);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return m &lt; 60 ? m + " min ago" : Math.round(m / 60) + " h ago";</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function show(d) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const name = String(d.ownerName || "Someone");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>who.textContent = name;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (Date.now() &gt; Number(d.expiresAt)) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setBadge("Expired");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render(["This Live Share has expired."]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const sos = d.status === "sos";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const stale = Date.now() - Number(d.updatedAt) &gt; STALE_MS;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setBadge(sos ? "SOS" : (stale ? "No recent update" : "Live"), sos ? "sos" : (stale ? "" : "live"));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const lines = ["Last update: " + ago(Number(d.updatedAt))];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (sos &amp;&amp; d.sosAt) lines.unshift(name + " triggered an SOS " + ago(Number(d.sosAt)) + ".");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (stale) lines.push("The phone may be offline or out of signal. The last known position is shown.");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (d.trailActive &amp;&amp; typeof d.distanceMeters === "number")</p>
+<p class="p1"><span class="Apple-converted-space">      </span>lines.push("Trail distance: " + (d.distanceMeters / 1000).toFixed(2) + " km");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>lines.push("Sharing ends at " + new Date(Number(d.expiresAt)).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const links = [];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (typeof d.lat === "number" &amp;&amp; typeof d.lon === "number") {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const lat = Number(d.lat), lon = Number(d.lon);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const colour = sos ? "#B3261E" : "#2D5A3D";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!dot) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>halo = L.circle([lat, lon], { radius: d.accuracy || 20, color: colour, weight: 1, fillOpacity: 0.1 }).addTo(map);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dot = L.circleMarker([lat, lon], { radius: 9, color: "#fff", weight: 3, fillColor: colour, fillOpacity: 1 }).addTo(map);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dot.setLatLng([lat, lon]).setStyle({ fillColor: colour });</p>
+<p class="p1"><span class="Apple-converted-space">        </span>halo.setLatLng([lat, lon]).setRadius(d.accuracy || 20).setStyle({ color: colour });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!centred) { map.setView([lat, lon], 16); centred = true; }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>else if (!map.getBounds().contains([lat, lon])) map.panTo([lat, lon]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>links.push({ label: "Open in Apple Maps", href: "https://maps.apple.com/?ll=" + lat + "," + lon });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>links.push({ label: "Open in Google Maps", href: "https://www.google.com/maps?q=" + lat + "," + lon });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>lines.push("Waiting for the first location…");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>render(lines, links, sos);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>async function poll() {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!token || token.length &lt; 24) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setBadge("Invalid link"); render(["This link isn't valid."]); return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const res = await fetch(DB_URL + "/shares/" + encodeURIComponent(token) + ".json", { cache: "no-store" });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!res.ok) throw new Error("HTTP " + res.status);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const data = await res.json();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!data) { who.textContent = "TrailSafe Live Share"; setBadge("Ended"); render(["This Live Share has ended."]); }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>else show(data);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} catch (e) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setBadge("Reconnecting…");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setTimeout(poll, POLL_MS);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>poll();</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
