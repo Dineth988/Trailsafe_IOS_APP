@@ -7,6 +7,9 @@ struct DashboardView: View {
     @EnvironmentObject private var location: LocationService
     @Environment(\.managedObjectContext) private var context
     @Environment(\.openURL) private var openURL
+    @EnvironmentObject private var zones: SafeZoneMonitor
+    @EnvironmentObject private var sos: SOSManager
+    @EnvironmentObject private var notifications: NotificationService
 
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var showStartSheet = false
@@ -24,6 +27,7 @@ struct DashboardView: View {
                 onStart: {
                     showStartSheet = false
                     recorder.start(ownerID: appState.currentUser?.id)
+                    Task { await notifications.requestAuthorizationIfNeeded() }
                 },
                 onCancel: { showStartSheet = false }
             )
@@ -45,6 +49,7 @@ struct DashboardView: View {
         .task {
             location.requestPermissionIfNeeded()
             recorder.recoverIfNeeded(ownerID: appState.currentUser?.id)
+            zones.reload(ownerID: appState.currentUser?.id, context: context)
             refreshWeekly()
         }
         .onChange(of: recorder.state) { _, newState in
@@ -64,6 +69,11 @@ struct DashboardView: View {
     private var map: some View {
         Map(position: $position) {
             UserAnnotation()
+            if let center = zones.zoneCenter {
+                MapCircle(center: center, radius: zones.zoneRadius)
+                    .foregroundStyle(Theme.primary.opacity(0.15))
+                    .stroke(Theme.primary, lineWidth: 2)
+            }
             ForEach(Array(drawableSegments.enumerated()), id: \.offset) { _, coordinates in
                 MapPolyline(coordinates: coordinates)
                     .stroke(Theme.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
@@ -80,14 +90,15 @@ struct DashboardView: View {
     private var topOverlay: some View {
         VStack(spacing: Theme.Spacing.sm) {
             HStack {
-                SOSButton(size: 56) {
-                    // SOS flow arrives on Day 3.
-                }
+                SOSButton(size: 56) { sos.begin() }
                 Spacer()
             }
             if location.isDenied { permissionBanner }
         }
         .padding(Theme.Spacing.md)
+        .fullScreenCover(isPresented: Binding(get: { sos.phase != .idle }, set: { _ in })) {
+            SOSOverlay()
+        }
     }
 
     private var permissionBanner: some View {
@@ -130,6 +141,27 @@ struct DashboardView: View {
                 .font(Typography.caption)
                 .foregroundStyle(Theme.textSecondary)
             Spacer()
+            zoneChip
+        }
+    }
+    
+    @ViewBuilder
+    private var zoneChip: some View {
+        switch zones.status {
+        case .noZone:
+            EmptyView()
+        case .unknown:
+            Label("Checking zone…", systemImage: "shield")
+                .font(Typography.caption)
+                .foregroundStyle(Theme.textSecondary)
+        case .inside:
+            Label("In \(zones.zoneName ?? "safe zone")", systemImage: "checkmark.shield.fill")
+                .font(Typography.caption)
+                .foregroundStyle(Theme.primary)
+        case .outside:
+            Label("Outside safe zone", systemImage: "exclamationmark.shield.fill")
+                .font(Typography.caption)
+                .foregroundStyle(Theme.accent)
         }
     }
 

@@ -45,6 +45,7 @@ struct MainTabView: View {
         TabView {
             DashboardView()
                 .tabItem { Label("Home", systemImage: "map.fill") }
+            
 
             PlaceholderScreen(title: "History", icon: "chart.bar.fill",
                               detail: "Past sessions and charts arrive on Day 4.")
@@ -54,8 +55,7 @@ struct MainTabView: View {
                               detail: "Trusted contacts and Live Share arrive on Day 4.")
                 .tabItem { Label("Contacts", systemImage: "person.2.fill") }
 
-            PlaceholderScreen(title: "Settings", icon: "gearshape.fill",
-                              detail: "Full settings arrive on Day 3.")
+            SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
     }
