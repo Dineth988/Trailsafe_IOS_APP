@@ -9,21 +9,42 @@ extension SafeZone {
     static func make(in context: NSManagedObjectContext) -> SafeZone {
         NSEntityDescription.insertNewObject(forEntityName: "SafeZone", into: context) as! SafeZone
     }
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: centerLatitude, longitude: centerLongitude)
+    }
 }
 
-/// The MVP supports one safe zone per user (multi-zone arrives on Day 5).
+enum GeoMath {
+    /// The point exactly `meters` east of `center` (used for the resize handle).
+    static func edgeCoordinate(of center: CLLocationCoordinate2D, meters: Double) -> CLLocationCoordinate2D {
+        let metersPerDegreeLon = 111_320 * max(cos(center.latitude * .pi / 180), 0.01)
+        return CLLocationCoordinate2D(latitude: center.latitude,
+                                      longitude: center.longitude + meters / metersPerDegreeLon)
+    }
+}
+
 enum SafeZoneStore {
-    static func zone(ownerID: UUID?, in context: NSManagedObjectContext) -> SafeZone? {
-        guard let ownerID else { return nil }
+    static let maxZones = 10
+
+    static func zones(ownerID: UUID?, in context: NSManagedObjectContext) -> [SafeZone] {
+        guard let ownerID else { return [] }
         let request = SafeZone.fetchRequest()
         request.predicate = NSPredicate(format: "ownerID == %@", ownerID as CVarArg)
-        request.fetchLimit = 1
-        return try? context.fetch(request).first
+        request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        return (try? context.fetch(request)) ?? []
     }
 
-    static func activeZone(ownerID: UUID?, in context: NSManagedObjectContext) -> SafeZone? {
-        guard let zone = zone(ownerID: ownerID, in: context), zone.isActive else { return nil }
-        return zone
+    static func zone(ownerID: UUID?, in context: NSManagedObjectContext) -> SafeZone? {
+        zones(ownerID: ownerID, in: context).first
+    }
+
+    static func activeZones(ownerID: UUID?, in context: NSManagedObjectContext) -> [SafeZone] {
+        zones(ownerID: ownerID, in: context).filter { $0.isActive }
+    }
+
+    static func canAddZone(ownerID: UUID?, in context: NSManagedObjectContext) -> Bool {
+        zones(ownerID: ownerID, in: context).count < maxZones
     }
 
     @discardableResult

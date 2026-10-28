@@ -64,15 +64,17 @@ struct SettingsView: View {
     private var safetySection: some View {
         Section {
             NavigationLink {
-                SafeZoneView()
+                SafeZonesListView(ownerID: appState.currentUser?.id)
             } label: {
                 HStack {
-                    Label("Safe zone", systemImage: "shield.lefthalf.filled")
+                    Label("Safe zones", systemImage: "shield.lefthalf.filled")
                     Spacer()
-                    Text(zones.zoneName ?? "Not set")
+                    Text(zones.zones.isEmpty ? "None" : "\(zones.zones.count) active")
                         .foregroundStyle(Theme.textSecondary)
                 }
             }
+            
+            
             Toggle("Alert when I leave or re-enter it", isOn: $settings.zoneAlertsEnabled)
             Toggle("Alert if I stop moving", isOn: $settings.stationaryAlertsEnabled)
             if settings.stationaryAlertsEnabled {
@@ -109,6 +111,7 @@ struct SettingsView: View {
                 EmptyView()
             }
             Toggle("Trail complete alert", isOn: $settings.sessionCompleteAlertsEnabled)
+            Toggle("Severe weather alerts", isOn: $settings.weatherAlertsEnabled)
             Toggle("Daily check-in reminder", isOn: $settings.dailyCheckInEnabled)
             if settings.dailyCheckInEnabled {
                 DatePicker("Time", selection: $settings.checkInTime, displayedComponents: .hourAndMinute)

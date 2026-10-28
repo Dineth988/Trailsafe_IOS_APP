@@ -9,6 +9,7 @@ final class SafetySettings: ObservableObject {
         static let sessionComplete = "sessionCompleteAlertsEnabled"
         static let checkInEnabled = "dailyCheckInEnabled"
         static let checkInMinutes = "checkInMinutes"
+        static let weatherAlerts = "weatherAlertsEnabled"
     }
 
     private let defaults: UserDefaults
@@ -32,6 +33,9 @@ final class SafetySettings: ObservableObject {
     @Published var checkInMinutes: Int {
         didSet { defaults.set(checkInMinutes, forKey: Keys.checkInMinutes) }
     }
+    @Published var weatherAlertsEnabled: Bool {
+        didSet { defaults.set(weatherAlertsEnabled, forKey: Keys.weatherAlerts) }
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -41,6 +45,7 @@ final class SafetySettings: ObservableObject {
         sessionCompleteAlertsEnabled = defaults.object(forKey: Keys.sessionComplete) as? Bool ?? true
         dailyCheckInEnabled = defaults.object(forKey: Keys.checkInEnabled) as? Bool ?? false
         checkInMinutes = defaults.object(forKey: Keys.checkInMinutes) as? Int ?? 20 * 60
+        weatherAlertsEnabled = defaults.object(forKey: Keys.weatherAlerts) as? Bool ?? true
     }
 
     /// Bridges the stored minutes to a Date for DatePicker.

@@ -10,7 +10,9 @@ struct DashboardView: View {
     @EnvironmentObject private var zones: SafeZoneMonitor
     @EnvironmentObject private var sos: SOSManager
     @EnvironmentObject private var notifications: NotificationService
-
+    @EnvironmentObject private var weather: WeatherService
+    
+    @State private var showWeather = false
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var showStartSheet = false
     @State private var showStopSheet = false
@@ -41,6 +43,7 @@ struct DashboardView: View {
                 onContinue: { showStopSheet = false }
             )
         }
+        .sheet(isPresented: $showWeather) { WeatherSheet() }
         .fullScreenCover(isPresented: summaryBinding) {
             if let session = recorder.completedSession {
                 SessionSummaryView(session: session) { recorder.dismissSummary() }
@@ -51,6 +54,7 @@ struct DashboardView: View {
             recorder.recoverIfNeeded(ownerID: appState.currentUser?.id)
             zones.reload(ownerID: appState.currentUser?.id, context: context)
             refreshWeekly()
+            weather.refreshIfNeeded()
         }
         .onChange(of: recorder.state) { _, newState in
             if newState == .recording {
@@ -69,10 +73,10 @@ struct DashboardView: View {
     private var map: some View {
         Map(position: $position) {
             UserAnnotation()
-            if let center = zones.zoneCenter {
-                MapCircle(center: center, radius: zones.zoneRadius)
-                    .foregroundStyle(Theme.primary.opacity(0.15))
-                    .stroke(Theme.primary, lineWidth: 2)
+            ForEach(zones.zones) { zone in
+                MapCircle(center: zone.center, radius: zone.radius)
+                    .foregroundStyle((zone.state == .outside ? Theme.accent : Theme.primary).opacity(0.15))
+                    .stroke(zone.state == .outside ? Theme.accent : Theme.primary, lineWidth: 2)
             }
             ForEach(Array(drawableSegments.enumerated()), id: \.offset) { _, coordinates in
                 MapPolyline(coordinates: coordinates)
@@ -92,6 +96,7 @@ struct DashboardView: View {
             HStack {
                 SOSButton(size: 56) { sos.begin() }
                 Spacer()
+                weatherButton
             }
             if location.isDenied { permissionBanner }
         }
@@ -116,6 +121,31 @@ struct DashboardView: View {
         }
         .padding(12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
+    }
+    
+    private var weatherButton: some View {
+        let level = weather.assessment?.level ?? .safe
+        let hazardFill: Color = level == .severe ? Color(hex: 0xB3261E) : Theme.accent
+
+        return Button {
+            showWeather = true
+            weather.refreshIfNeeded()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: weather.snapshot?.condition.symbol ?? "cloud.sun")
+                if let snapshot = weather.snapshot {
+                    Text("\(Int(snapshot.temperatureC.rounded()))°").monospacedDigit()
+                }
+                if level >= .warning { Image(systemName: "exclamationmark.triangle.fill") }
+            }
+            .font(Typography.headline)
+            .foregroundStyle(level == .severe ? Color.white : (level == .warning ? Color(hex: 0x1B2A21) : Theme.textPrimary))
+            .padding(.horizontal, 12)
+            .frame(minHeight: 44)
+            .background(Capsule().fill(level >= .warning ? hazardFill : Color.clear))
+            .background(.regularMaterial, in: Capsule())
+        }
+        .accessibilityLabel("Weather")
     }
 
     // MARK: Control panel
@@ -151,15 +181,15 @@ struct DashboardView: View {
         case .noZone:
             EmptyView()
         case .unknown:
-            Label("Checking zone…", systemImage: "shield")
+            Label("Checking zones…", systemImage: "shield")
                 .font(Typography.caption)
                 .foregroundStyle(Theme.textSecondary)
         case .inside:
-            Label("In \(zones.zoneName ?? "safe zone")", systemImage: "checkmark.shield.fill")
+            Label("In \(zones.currentZoneName ?? "safe zone")", systemImage: "checkmark.shield.fill")
                 .font(Typography.caption)
                 .foregroundStyle(Theme.primary)
         case .outside:
-            Label("Outside safe zone", systemImage: "exclamationmark.shield.fill")
+            Label("Outside safe zones", systemImage: "exclamationmark.shield.fill")
                 .font(Typography.caption)
                 .foregroundStyle(Theme.accent)
         }

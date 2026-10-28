@@ -11,6 +11,9 @@ struct IOS_CW2App: App {
     @StateObject private var sos: SOSManager
     @StateObject private var coordinator: SafetyCoordinator
     @StateObject private var liveShare: LiveShareManager
+    @StateObject private var weather: WeatherService
+    @StateObject private var liveActivity: LiveActivityManager
+    
     private let persistence = PersistenceController.shared
 
     init() {
@@ -24,6 +27,9 @@ struct IOS_CW2App: App {
         let coordinator = SafetyCoordinator(location: location, recorder: recorder, zones: zones,
                                             notifications: notifications, settings: settings)
         let liveShare = LiveShareManager(location: location, recorder: recorder)
+        let weather = WeatherService(location: location, recorder: recorder,
+                                     notifications: notifications, settings: settings)
+        let liveActivity = LiveActivityManager(recorder: recorder)
 
         liveShare.ownerNameProvider = { appState.currentUser?.name ?? "A TrailSafe user" }
         sos.onTriggered = { event in liveShare.handleSOS(event) }
@@ -38,6 +44,8 @@ struct IOS_CW2App: App {
         _sos = StateObject(wrappedValue: sos)
         _coordinator = StateObject(wrappedValue: coordinator)
         _liveShare = StateObject(wrappedValue: liveShare)
+        _weather = StateObject(wrappedValue: weather)
+        _liveActivity = StateObject(wrappedValue: liveActivity)
     }
 
     var body: some Scene {
@@ -52,6 +60,7 @@ struct IOS_CW2App: App {
                 .environmentObject(sos)
                 .environmentObject(coordinator)
                 .environmentObject(liveShare)
+                .environmentObject(weather)
                 .environment(\.managedObjectContext, persistence.container.viewContext)
         }
     }
