@@ -63,6 +63,7 @@ struct SafeZoneEditorView: View {
 
     private var mapView: some View {
         let modes: MapInteractionModes = editing ? [] : .all
+        let gestureMask: GestureMask = editing ? .all : .none
 
         return MapReader { proxy in
             Map(position: $position, interactionModes: modes) {
@@ -78,16 +79,19 @@ struct SafeZoneEditorView: View {
                     MapCircle(center: center, radius: radius)
                         .foregroundStyle(Theme.primary.opacity(0.2))
                         .stroke(Theme.primary, lineWidth: 3)
+
                     Annotation("Centre", coordinate: center) {
                         handle("mappin", tint: Theme.primary)
                     }
+                    .annotationTitles(.hidden)
+
                     Annotation("Resize", coordinate: GeoMath.edgeCoordinate(of: center, meters: radius)) {
                         handle("arrow.left.and.right", tint: Theme.accent)
                     }
+                    .annotationTitles(.hidden)
                 }
             }
-            .annotationTitles(.hidden)
-            .gesture(dragGesture(proxy), including: editing ? .all : .none)
+            .gesture(dragGesture(proxy), including: gestureMask)
         }
         .frame(height: 340)
         .overlay(alignment: .top) {
